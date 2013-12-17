@@ -99,50 +99,50 @@
   (receiver-id-check #f) (declared-value 0) 
   (return-receipt #f) (return-url "XML"))
 
-(define-record-printer (request sr out)
+(define-record-printer (request req out)
   (fprintf out
       "#<request service: ~S from-zip: ~S
        to-zip: ~S company: ~S password: ~S pkg-weight: ~S
        pkg-format: ~S pkg-length: ~S pkg-height: ~S
        pkg-breadth: ~S pkg-diameter: ~S receiver-id-check: ~S
        declared-value: ~S return-receipt: ~S return-url: ~S>"
-    (request-service sr)
-    (request-from-zip sr)
-    (request-to-zip sr)
-    (request-company sr)
-    (request-password sr)
-    (request-pkg-weight sr)
-    (request-pkg-format sr)
-    (request-pkg-length sr)
-    (request-pkg-height sr)
-    (request-pkg-breadth sr)
-    (request-pkg-diameter sr)	  
-    (request-receiver-id-check sr)
-    (request-declared-value sr)
-    (request-return-receipt sr)
-    (request-return-url sr)))
+    (request-service req)
+    (request-from-zip req)
+    (request-to-zip req)
+    (request-company req)
+    (request-password req)
+    (request-pkg-weight req)
+    (request-pkg-format req)
+    (request-pkg-length req)
+    (request-pkg-height req)
+    (request-pkg-breadth req)
+    (request-pkg-diameter req)	  
+    (request-receiver-id-check req)
+    (request-declared-value req)
+    (request-return-receipt req)
+    (request-return-url req)))
 
 (defstruct response
   service cost delivery-time receiver-id-check-cost
   return-receipt-cost declared-value-cost home-delivery
   sunday-delivery error error-msg)
 
-(define-record-printer (response sr out)
+(define-record-printer (response resp out)
   (fprintf out
       "#<response service: ~S cost: ~S delivery-time: ~S 
        receiver-id-check-cost: ~S return-receipt-cost: ~S 
        declared-value-cost: ~S home-delivery: ~S sunday-delivery: ~S 
        error: ~S error-msg: ~S>"
-    (response-service sr)
-    (response-cost sr)
-    (response-delivery-time sr)
-    (response-receiver-id-check-cost sr)
-    (response-return-receipt-cost sr)
-    (response-declared-value-cost sr)
-    (response-home-delivery sr)
-    (response-sunday-delivery sr)
-    (response-error sr)
-    (response-error-msg sr)))
+    (response-service resp)
+    (response-cost resp)
+    (response-delivery-time resp)
+    (response-receiver-id-check-cost resp)
+    (response-return-receipt-cost resp)
+    (response-declared-value-cost resp)
+    (response-home-delivery resp)
+    (response-sunday-delivery resp)
+    (response-error resp)
+    (response-error-msg resp)))
 
 (define (boolean->correios-string bool)
   (if bool "S" "N"))
@@ -187,20 +187,20 @@
   (let ((v (cdr (assoc key alist))))
     (if (null? v) #f v)))
 
-(define (service-alist->response service)
+(define (service-alist->response alist)
   (make-response 
-   service: (service-number->name (get-value 'Codigo service))
-   cost: (get-value 'Valor service)
-   delivery-time: (get-value 'PrazoEntrega service)
-   receiver-id-check-cost: (get-value 'ValorMaoPropria service)
-   return-receipt-cost: (get-value 'ValorAvisoRecebimento service)
-   declared-value-cost: (get-value 'ValorValorDeclarado service)
-   home-delivery: (get-value 'EntregaDomiciliar service)
-   sunday-delivery: (correios-string->boolean (get-value 'EntregaSabado service))
-   error: (get-value 'Erro service)
-   error-msg: (get-value 'MsgErro service)))
+   service: (service-number->name (get-value 'Codigo alist))
+   cost: (get-value 'Valor alist)
+   delivery-time: (get-value 'PrazoEntrega alist)
+   receiver-id-check-cost: (get-value 'ValorMaoPropria alist)
+   return-receipt-cost: (get-value 'ValorAvisoRecebimento alist)
+   declared-value-cost: (get-value 'ValorValorDeclarado alist)
+   home-delivery: (get-value 'EntregaDomiciliar alist)
+   sunday-delivery: (correios-string->boolean (get-value 'EntregaSabado alist))
+   error: (get-value 'Erro alist)
+   error-msg: (get-value 'MsgErro alist)))
 
-(define (response->proper-alist response)
+(define (response->proper-alist resp)
   (map (lambda (service)
 	 (map (lambda (item)
 		(cons (car item)
@@ -208,7 +208,7 @@
 			  '()
 			  (cadr item))))
 	      (cdr service)))
-       response))
+       resp))
 
 (define (process-request req)
   (let* ((url (compose-url req))
@@ -223,7 +223,7 @@
 	  ;; from XML response return only the list of services
 	  (cdaddr data))))) 
 
-(define (valid-response? response)
-  (string=? "0" (response-error response)))
+(define (valid-response? resp)
+  (string=? "0" (response-error resp)))
 
 ) ;; End of module correios
