@@ -1,5 +1,4 @@
-(use test 
-     (prefix correios correios:))
+(use test correios)
 
 (define ship-req (make-request 
 		  service: (list 'SEDEX 'PAC)
@@ -9,8 +8,8 @@
 (define responses (process-request ship-req))
 
 (for-each (lambda (r)
-	    (test-assert "process-request returns a list of responses"
-			 (reponse? r)))
+	    (test-assert "check if object is correios response"
+			 (response? r)))
 	  responses)
 
 ;; (let loop ((responses (process-request ship-req)))

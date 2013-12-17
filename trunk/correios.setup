@@ -1,9 +1,9 @@
 ;; -*- Scheme -*-
 
-(compile -s -O3 correios.scm -j intarweb)
-(compile -s -O3 correios.import.scm)
+(compile -s -O2 correios.scm -j correios)
+(compile -s -O2 correios.import.scm)
 
 (install-extension
   'correios
   '("correios.so" "correios.import.so")
-  `((version "0.1")))
+  '((version "0.1")))

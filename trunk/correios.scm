@@ -34,8 +34,7 @@
 ; Please report bugs and suggestions to arthurmaciel at gmail dot com
 
 (module correios 
- (calculate-shipping
-  process-request
+ (process-request
   valid-response?
 
   make-request request?
@@ -65,11 +64,10 @@
   response-home-delivery response-home-delivery-set!
   response-sunday-delivery response-sunday-delivery-set! 
   response-error response-error-set! 
-  response-error-msg response-error-msg-set!
-  )
+  response-error-msg response-error-msg-set!)
 
-(import chicken scheme)
-(use srfi-1 defstruct http-client ssax uri-common)
+(import chicken scheme data-structures extras ports srfi-1)
+(use defstruct http-client uri-common ssax)
 
 (define host "ws.correios.com.br")
 (define path '("" "calculador" "CalcPrecoPrazo.aspx"))
