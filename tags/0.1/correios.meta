@@ -1,8 +1,0 @@
-;; -*- Scheme -*-
-
-((synopsis "Correios post office shipping tax calculation library")
- (author "Arthur Maciel")
- (category web)
- (license "BSD")
- (depends srfi-1 defstruct http-client ssax uri-common))
- (test-depends test))
