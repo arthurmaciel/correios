@@ -1,3 +1,3 @@
 (repo git "git://github.com/arthurmaciel/correios.git")
-(uri targz "http://githubredir.debian.net/github/arthurmaciel/correios/v0.1.tar.gz")
+(uri targz "https://codeload.github.com/arthurmaciel/{egg-name}/tar.gz/{egg-release}")
 (release "0.1")
