@@ -18,57 +18,95 @@ Requires the [[defstruct]], [[http-client]], [[ssax]] and [[uri-common]] eggs an
 
 === Documentation
 
-==== Data-structures
+==== Requests
 
-<record>request</record>
+<procedure>(make-request #!key service from-zip to-zip (company "") (password "") (pkg-weight 0.3) (pkg-format 1) (pkg-length 16) (pkg-height 2) (pkg-breadth 11) (pkg-diameter 0) (receiver-id-check #f) (declared-value 0) (return-receipt #f) (return-url "XML"))</procedure>
+Create a correios {{request}} object (a [[defstruct]] record) to be processed. It has many attributes that correspond to the official [[http://www.correios.com.br/webServices/PDF/SCPP_manual_implementacao_calculo_remoto_de_precos_e_prazos.pdf|Correios web service specification]]:
 
-This is a correios request object to be created and processed. It is a [[defstruct]] record and has a constructor {{make-request}}. It has many accessors that correspond to the official [[http://www.correios.com.br/webServices/PDF/SCPP_manual_implementacao_calculo_remoto_de_precos_e_prazos.pdf|Correios web service specification]]:
+; SERVICE: available delivery services: {{'PAC}}, {{'SEDEX}}, {{'SEDEX-10}}, {{'SEDEX-HOJE}} and {{'SEDEX-A-COBRAR}}. It can also be a list combining one or more of these symbols (ie. {{'(PAC SEDEX SEDEX-10)}}).
+; FROM-ZIP: sender's zip code and should be a string with 8 digits (only numbers allowed).
+; TO-ZIP: receiver's zip code and should be a string with 8 digits (only numbers allowed).
+; COMPANY: company code, if yours has one. It should be a string.
+; PASSWORD: company password, only if a company code is provided. It should be a string.
+; PKG-WEIGHT: package weight in kilograms. Should be a number.
+; PKG-FORMAT: package format and should be a number: 1 for box/package, 2 for roller/prism and 3 for envelope.
+; PKG-LENGTH: package length in centimeters (including packing size) and should be a number.
+; PKG-HEIGHT: package height in centimeters (including packing size) and should be a number.
+; PKG-BREADTH: package breadth in centimeters (including packing size) and should be a number.
+; PKG-DIAMETER: package diameter in centimeters (including packing size) and should be a number.
+; RECEIVER-ID-CHECK: a boolean and determines whether the package should be delivered only to the receiver's hand (Correios calls this service "Mão própria").
+; DECLARED-VALUE: package declared value in Brazillian Reais, to be returned in case of miscarriage. It should be a number - ex.: {{33.50}} (default is {{0}}, which means no use of service).
+; RETURN-RECEIPT: a boolean and determines whether the package should be delivered with additional service of a return receipt ({{#f}} means no use of the service).
+; RETURN-URL: request return URL or type - at the moment can only be "XML".
 
-'''Note:''' although all values returned use Brazillian decimal notation with a comma separating cents from integers (ex.: {{3,25}}), all the decimal values provided to the constructor should have a dot (ex.: {{3.25}}) separating those parts.
+'''Note:''' although all values returned use Brazillian decimal notation with a comma separating cents from integers (ex.: {{3,25}}), all the decimal values provided to {{make-request}} should have a dot (ex.: {{3.25}}) separating those parts.
 
-; request-service : Available delivery services - PAC, SEDEX, SEDEX-10, SEDEX-HOJE and SEDEX-A-COBRAR. Should be a symbol or a list of symbols - ex.: {{'PAC}}  or {{'(PAC SEDEX SEDEX-10)}}.
-; request-from-zip : Sender zip code. Should be a string with 8 digits (only numbers are allowed).
-; request-to-zip : Receiver zip code. Should be a string with 8 digits (only numbers are allowed).
-; request-company : Company code, if yours has one. Should be a string (default is {{""}}).
-; request-password : Company password, only if a company code is provided. Should be a string (default is {{""}}).
-; request-pkg-weight : Package weight in kilograms. Should be a number (default is {{0.3}}).
-; request-pkg-format : Package format. Should be a number: 1 for box/package, 2 for roller/prism and 3 for envelope (default is {{1}}).
-; request-pkg-length : Package length in centimeters, including packing size. Should be a number (default is {{16}}).
-; request-pkg-height : Package height in centimeters, including packing size. Should be a number (default is {{2}}).
-; request-pkg-breadth : Package breadth in centimeters, including packing size. Should be a number (default is {{11}}).
-; request-pkg-diameter : Package diameter in centimeters, including packing size. Should be a number (default is {{0}}). 
-; request-receiver-id-check : If package should be delivered only to the receiver (Correios calls this service "Mão própria"). Should be a boolean (default is {{#f}}).
-; request-declared-value : Package declared value in Brazillian Reais, to be returned in case of miscarriage. Should be a number - ex.: {{33.50}} (default is {{0}}, which means no use of service).
-; request-return-receipt : If package should be delivered with additional service of a return receipt. Should be a boolean (default is {{#f}}, which means no use of service).
-; request-return-url : The request return type - at the moment can only be "XML".
+<procedure>(update-request old-request #!key service from-zip to-zip company password pkg-weight pkg-format pkg-length pkg-height pkg-breadth pkg-diameter receiver-id-check declared-value return-receipt return-url)</procedure>
+Like make-request, except this takes an old-request object as a template for values which are missing from the parameter list, thereby providing a way to do a purely functional update of that object.
+
+<procedure>(process-request REQUEST)</procedure>
+This is the core procedure for shipping cost calculation. It accepts a {{request}} object as a parameter and returns a ''list'' of {{response}} objects. The list can be processed (see [[#examples|Examples]] below) and data can be extracted from each response using its accessors (see [[#responses|{{response}}]] details below).
+
+For each {{request}} attribute there is a respective accessor procedure:
+
+<procedure>(request-service REQUEST) => SERVICE</procedure>
+<procedure>(request-from-zip REQUEST) => FROM-ZIP</procedure>
+<procedure>(request-to-zip REQUEST) => TO-ZIP</procedure>
+<procedure>(request-company REQUEST) => COMPANY</procedure>
+<procedure>(request-password REQUEST) => PASSWORD</procedure>
+<procedure>(request-pkg-weight REQUEST) => PKG-WEIGHT</procedure>
+<procedure>(request-pkg-format REQUEST) => PKG-FORMAT</procedure>
+<procedure>(request-pkg-length REQUEST) => PKG-LENGTH</procedure>
+<procedure>(request-pkg-height REQUEST) => PKG-HEIGHT</procedure>
+<procedure>(request-pkg-breadth REQUEST) => PKG-BREADTH</procedure>
+<procedure>(request-pkg-diameter REQUEST) => PKG-DIAMETER</procedure>
+<procedure>(request-receiver-id-check REQUEST) => RECEIVER-ID-CHECK</procedure>
+<procedure>(request-declared-value REQUEST) => DECLARED-VALUE</procedure>
+<procedure>(request-return-receipt REQUEST) => RETURN-RECEIPT</procedure>
+<procedure>(request-return-url REQUEST) => RETURN-URL</procedure>
+
+==== Responses
 
 <record>response</record>
 
-This is a correios shipping response object that is generated by {{process-request}}. It is a [[defstruct]] record and has a constructor {{make-response}}. It has many accessors that correspond to the official [[http://www.correios.com.br/webServices/PDF/SCPP_manual_implementacao_calculo_remoto_de_precos_e_prazos.pdf|Correios web service specification]] (see the {{request}} record above for details):
+This is a correios shipping response object that is generated by {{process-request}}. It is a [[defstruct]] record and has a constructor {{make-response}} (used only internally). It has 10 attributes that can be retrieved using the respective accessor procedure:
 
-; response-service : symbol - ex.: {{'PAC}}, {{'SEDEX}} or {{SEDEX-10)}}.
-; response-cost : string - total delivery cost in Brazillian Reais - ex.: {{15,80}}.
-; response-delivery-time : number - representing days.
-; response-receiver-id-check-cost : string - cost of this service in Brazillian Reais - ex.: {{3,20}}
-; response-return-receipt-cost : string - cost of this service in Brazillian Reais - ex.: {{2,90}}
-; response-declared-value-cost : string - cost of this service in Brazillian Reais - ex.: {{32,50}}
-; response-home-delivery : boolean - indicates if home delivery is available (believe or not there are many inaccessible areas in Brazil!) - ex.: {{#f}}.
-; response-sunday-delivery : boolean - indicates if delivery on sundays is available - ex.: {{#t}}.
-; response-error : string - indicates error number. Returns {{"0"}} if no error or other number if so (see pages 14 and 15 of the [[http://www.correios.com.br/webServices/PDF/SCPP_manual_implementacao_calculo_remoto_de_precos_e_prazos.pdf|Correios web service specification]]).
-; response-error-msg : returns {{#f}} if no error or a string with the error message otherwise.
+<procedure>(response-service RESPONSE) => SERVICE</procedure>
+Returns the delivery service type as a symbol - ie. {{'PAC}}, {{'SEDEX}} or {{SEDEX-10)}}.
 
-==== Procedures
+<procedure>(response-cost RESPONSE) => COST</procedure>
+Returns the total delivery cost in Brazillian Reais as a string - ie. {{"15,80"}}.
 
-<procedure>(process-request request)</procedure>
+<procedure>(response-delivery-time RESPONSE) => DELIVERY-TIME</procedure>
+Returns the delivery time in days as a number.
 
-This is the core correios procedure for shipping cost calculation. It accepts a {{request}} as a parameter and returns a ''list'' of {{response}}. The list can be processed (see Examples below) and data can be extracted from each response using its accessors (see {{response}} details above).
+<procedure>(response-receiver-id-check-cost RESPONSE) => RECEIVER-ID-CHECK-COST</procedure>
+Returns the cost of the {{receiver-id-check}} service (if used) in Brazillian Reais as a string - ie. {{"3,20"}}.
 
-<procedure>(valid-response? response)</procedure>
+<procedure>(response-return-receipt-cost RESPONSE) => RETURN-RECEIPT-COST</procedure>
+Returns the cost of the {{return-receipt-cost}} service (if used) in Brazillian Reais as a string - ie. {{"2,90"}}.
 
+<procedure>(response-declared-value-cost RESPONSE) => DECLARED-VALUE-COST</procedure>
+Returns the cost of {{declared-value}} service in Brazillian Reais as a string - ie. {{"32,50"}}.
+
+<procedure>(response-home-delivery RESPONSE) => HOME-DELIVERY</procedure>
+Returns a boolean indicating whether or not the {{home-delivery}} service is available (believe it or not there are still many inaccessible areas in Brazil!).
+
+<procedure>(response-saturday-delivery RESPONSE) => SATURDAY-DELIVERY</procedure>
+Returns a boolean indicating whether or not the {{saturday-delivery}} service is available.
+
+<procedure>(response-error RESPONSE) => ERROR</procedure>
+Returns {{"0"}} if there were no errors or other number (in a string format) if so (see pages 14 and 15 of the [[http://www.correios.com.br/webServices/PDF/SCPP_manual_implementacao_calculo_remoto_de_precos_e_prazos.pdf|Correios web service specification]] for a complete error code list).
+
+<procedure>(response-error-msg RESPONSE) => ERROR-MSG</procedure>
+Returns a {{#f}} if there were no errors or a string with the error message.
+
+There is also a procedure to check if there {{response}} generated by {{process-request}} is valid:
+
+<procedure>(valid-response? RESPONSE)</procedure>
 Check if a specific response has generated errors. Returns a boolean.
 
-===== Examples
-
+==== Examples
 <enscript highlight="scheme">
 (use correios)
 
