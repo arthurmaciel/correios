@@ -8,7 +8,7 @@
 (define responses (process-request ship-req))
 
 (for-each (lambda (r)
-	    (test-assert "check if object is correios response" (response? r)))
+	    (test-assert "Object is a correios response" (response? r)))
 	  responses)
 
 (test-exit)

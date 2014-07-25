@@ -2,7 +2,7 @@
 ;; Correios - Brazillian post office service shipping calculation
 ;; http://www.correios.com.br/webServices/PDF/SCPP_manual_implementacao_calculo_remoto_de_precos_e_prazos.pdf
 ;;
-; Copyright (c) 2013, Arthur Maciel
+					; Copyright (c) 2013, Arthur Maciel
 ; All rights reserved.
 ;
 ; Redistribution and use in source and binary forms, with or without
@@ -213,11 +213,13 @@
 (define (process-request req)
   (let* ((url (compose-url req))
 	 (data
-	  (let-values (((xml uri resp) 
+	  (let-values (((xml _ _) 
 			(with-input-from-request url #f read-string)))
-	    (call-with-input-string xml
-				    (lambda (port)
-				      (ssax:xml->sxml port '()))))))
+	    (if (string? xml)
+		(call-with-input-string xml
+					(lambda (port)
+					  (ssax:xml->sxml port '())))
+		(error 'process-request "Request could not be processed.")))))
     (map service-alist->response 
 	 (response->proper-alist 
 	  ;; from XML response return only the list of services
